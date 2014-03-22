@@ -1,12 +1,10 @@
-# Gradle GAE Geb plugin [![Build Status](https://buildhive.cloudbees.com/job/erdi/job/gradle-gae-geb-plugin/badge/icon)](https://buildhive.cloudbees.com/job/erdi/job/gradle-gae-geb-plugin/)
+# Gradle AppEngine Geb plugin
 
-This plugin is a simple integration point between [Gradle GAE plugin](https://github.com/bmuschko/gradle-gae-plugin) and [Geb browser automation framework](http://www.gebish.org/). It doesn't provide any new tasks but only sets Geb's `baseUrl` configuration property based on Gradle GAE plugin's conventions using `SystemPropertiesBuildAdapter` mechanism.
+This plugin is a simple integration point between [Gradle AppEngine plugin](https://github.com/GoogleCloudPlatform/gradle-apspengine-plugin) and [Geb browser automation framework](http://www.gebish.org/). It doesn't provide any new tasks but only sets Geb's `baseUrl` configuration property based on Gradle GAE plugin's conventions using `SystemPropertiesBuildAdapter` mechanism.
 
 ## Usage
 
-**IMPORTANT:** Using this plugin only makes sense when **Gradle GAE plugin is applied to the project**. Please make sure that this is the case before applying this plugin to your project.
-
-	apply plugin: 'gae-geb'
+**IMPORTANT:** Using this plugin only makes sense when **Gradle AppEngine plugin is applied to the project**. Please make sure that this is the case before applying this plugin to your project.
 
 	buildscript {
 		repositories {
@@ -14,7 +12,7 @@ This plugin is a simple integration point between [Gradle GAE plugin](https://gi
 		}
 		
 		dependencies {
-			classpath 'org.gradle.api.plugins:gradle-gae-geb-plugin:0.3'
+			classpath 'org.gradle.api.plugins:gradle-appengine-geb-plugin:0.4'
 		}
 	}
 	

@@ -7,15 +7,16 @@ def compatibilityVersion = 1.5
 sourceCompatibility = compatibilityVersion
 targetCompatibility = compatibilityVersion
 group = 'org.gradle.api.plugins'
-version = '0.3'
+version = '0.4'
 
 buildscript {
 	repositories {
+        jcenter()
 		mavenCentral()
 	}
 
 	dependencies {
-		classpath 'org.gradle.api.plugins:gradle-nexus-plugin:0.1'
+		classpath 'org.gradle.api.plugins:gradle-nexus-plugin:0.3'
 	}
 }
 
@@ -25,12 +26,13 @@ repositories {
 
 dependencies {
 	groovy localGroovy()
-	compile gradleApi(), 'org.gradle.api.plugins:gradle-gae-plugin:0.7.5',
-			'org.codehaus.geb:geb-core:0.7.0'
+	compile gradleApi(),
+            'com.google.appengine:gradle-appengine-plugin:1.9.0',
+			'org.codehaus.geb:geb-core:0.7.2'
 	testCompile('org.spockframework:spock-core:0.6-groovy-1.8') {
 		exclude group: 'org.codehaus.groovy', module: 'groovy-all'
 	}
-	codenarc 'org.codenarc:CodeNarc:0.17'
+	codenarc 'org.codenarc:CodeNarc:0.20'
 }
 
 idea.project {
@@ -87,9 +89,14 @@ modifyPom {
 				name 'Marcin Erdmann'
 				email 'marcin.erdmann@proxerd.pl'
 			}
+			developer {
+				id 'musketyr'
+				name 'Vladimir Orany'
+				email 'vladmir@orany.cz'
+			}
 		}
 	}
-	dependencies.findAll { it.groupId == 'org.gradle.api.plugins' && it.artifactId == 'gradle-gae-plugin' }*.scope = 'provided'
+	dependencies.findAll { it.groupId == 'org.gradle.api.plugins' && it.artifactId == 'gradle-appengine-plugin' }*.scope = 'provided'
 	dependencies.removeAll(dependencies.findAll { it.scope == 'test' })
 }
 
