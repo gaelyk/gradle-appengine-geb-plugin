@@ -67,7 +67,7 @@ class IntegrationSpec extends Specification {
 
     def setup() {
         buildFile << """
-			def GaeGebPlugin = project.class.classLoader.loadClass('org.gradle.api.plugins.appenginegeb.AppEngineeGebPlugin')
+			def GaeGebPlugin = project.class.classLoader.loadClass('org.gradle.api.plugins.appenginegeb.AppengineGebPlugin')
 
             apply plugin: 'war'
 			apply plugin: 'appengine'

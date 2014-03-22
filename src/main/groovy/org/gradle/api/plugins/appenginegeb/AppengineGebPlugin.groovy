@@ -24,7 +24,7 @@ import org.gradle.api.execution.TaskExecutionGraph
 import org.gradle.api.tasks.testing.Test
 import geb.buildadapter.SystemPropertiesBuildAdapter
 
-class AppEngineeGebPlugin implements Plugin<Project> {
+class AppengineGebPlugin implements Plugin<Project> {
 
 	void apply(Project project) {
 		project.gradle.taskGraph.whenReady { TaskExecutionGraph taskGraph ->
