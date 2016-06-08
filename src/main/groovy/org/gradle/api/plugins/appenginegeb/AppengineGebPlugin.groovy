@@ -17,7 +17,6 @@
 package org.gradle.api.plugins.appenginegeb
 
 import com.google.appengine.AppEnginePlugin
-import com.google.appengine.AppEnginePluginConvention
 import org.gradle.api.Project
 import org.gradle.api.Plugin
 import org.gradle.api.execution.TaskExecutionGraph
@@ -28,8 +27,7 @@ class AppengineGebPlugin implements Plugin<Project> {
 
 	void apply(Project project) {
 		project.gradle.taskGraph.whenReady { TaskExecutionGraph taskGraph ->
-			AppEnginePluginConvention convention = project.convention.plugins.appengine
-			def url = "http://localhost:${convention.httpPort}/"
+			def url = "http://localhost:${project.appengine.httpPort}/"
 			Test gaeFunctionalTest = project.tasks.findByName(AppEnginePlugin.APPENGINE_FUNCTIONAL_TEST)
 			gaeFunctionalTest.systemProperty(SystemPropertiesBuildAdapter.BASE_URL_PROPERTY_NAME, url)
 		}

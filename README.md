@@ -12,7 +12,7 @@ This plugin is a simple integration point between [Gradle AppEngine plugin](http
 		}
 		
 		dependencies {
-			classpath 'org.gradle.api.plugins:gradle-appengine-geb-plugin:0.4'
+			classpath 'org.gradle.api.plugins:gradle-appengine-geb-plugin:0.5'
 		}
 	}
 	

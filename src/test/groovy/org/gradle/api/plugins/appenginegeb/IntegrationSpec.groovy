@@ -1,15 +1,14 @@
 package org.gradle.api.plugins.appenginegeb
 
 import com.google.appengine.AppEnginePlugin
-import com.google.appengine.AppEnginePluginConvention
+import com.google.appengine.AppEnginePluginExtension
 import geb.buildadapter.SystemPropertiesBuildAdapter
-import org.gradle.GradleLauncher
-import org.gradle.StartParameter
+import java.util.concurrent.CountDownLatch
+import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.execution.TaskExecutionListener
-import org.gradle.api.tasks.TaskState
+import org.gradle.api.execution.TaskExecutionGraph
 import org.gradle.api.tasks.testing.Test
-import org.gradle.initialization.DefaultGradleLauncher
+import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
@@ -19,30 +18,27 @@ class IntegrationSpec extends Specification {
 
     @Rule final TemporaryFolder dir = new TemporaryFolder()
 
-    static class ExecutedTask {
-        Task task
-        TaskState state
-    }
+    Task task(String taskName) {
+        Project project = ProjectBuilder.builder()
+            .withProjectDir(dir.root)
+            .build()
 
-    List<ExecutedTask> executedTasks = []
+        Task t
+        
+        // here be dragons ... (see http://gradle.1045684.n5.nabble.com/taskGraph-whenReady-not-firing-in-my-unit-test-td4515237.html)
+        project.evaluate()
 
-    GradleLauncher launcher(String... args) {
-        StartParameter startParameter = GradleLauncher.createStartParameter(args)
-        startParameter.setProjectDir(dir.root)
-        DefaultGradleLauncher launcher = GradleLauncher.newInstance(startParameter)
-        // launcher.gradle.scriptClassLoader.addParent(getClass().classLoader)
-        executedTasks.clear()
-        launcher.addListener(new TaskExecutionListener() {
-            void beforeExecute(Task task) {
-                executedTasks << new ExecutedTask(task: task)
-            }
-
-            void afterExecute(Task task, TaskState taskState) {
-                executedTasks.last().state = taskState
-                taskState.metaClass.upToDate = taskState.skipMessage == 'UP-TO-DATE'
-            }
-        })
-        launcher
+        TaskExecutionGraph taskGraph = project.gradle.taskGraph
+        taskGraph.buildOperationExecutor.currentOperation.set(new org.gradle.internal.progress.DefaultBuildOperationExecutor$OperationDetails(null, null))
+        taskGraph.addTasks([])
+        CountDownLatch latch = new CountDownLatch(1)
+        taskGraph.whenReady {
+            t = project.tasks.findByName(taskName)
+            latch.countDown()
+        }
+        taskGraph.execute()
+        latch.await()
+        t
     }
 
     File getBuildFile() {
@@ -61,20 +57,26 @@ class IntegrationSpec extends Specification {
         dir.newFile(path)
     }
 
-    ExecutedTask task(String name) {
-        executedTasks.find { it.task.name == name }
-    }
-
     def setup() {
         buildFile << """
-			def GaeGebPlugin = project.class.classLoader.loadClass('org.gradle.api.plugins.appenginegeb.AppengineGebPlugin')
-
+            def GaeGebPlugin = project.class.classLoader.loadClass('org.gradle.api.plugins.appenginegeb.AppengineGebPlugin')
+            
             apply plugin: 'war'
 			apply plugin: 'appengine'
 			apply plugin: GaeGebPlugin
 
+            buildscript {
+                repositories {
+                    mavenCentral()
+                }
+                dependencies {
+                    classpath 'com.google.appengine:gradle-appengine-plugin:1.9.34',
+                              'org.codehaus.geb:geb-core:0.7.2'
+                }
+            }
+
 			dependencies {
-				appengineSdk "com.google.appengine:appengine-java-sdk:1.9.0"
+				appengineSdk "com.google.appengine:appengine-java-sdk:1.9.38"
 			}
 
 			repositories {
@@ -85,10 +87,6 @@ class IntegrationSpec extends Specification {
 				downloadSdk = true
 			}
 		"""
-    }
-
-    def cleanup() {
-        launcher('appengineStop').run()
     }
 
     @Unroll("buildUrl system property is set when gae.http value is '#conventionValue'")
@@ -102,16 +100,13 @@ class IntegrationSpec extends Specification {
 			"""
         }
 
-        when:
-        launcher(AppEnginePlugin.APPENGINE_FUNCTIONAL_TEST).run()
-
-        then:
-        Test testTask = task(AppEnginePlugin.APPENGINE_FUNCTIONAL_TEST).task
+        expect:
+        Test testTask = task(AppEnginePlugin.APPENGINE_FUNCTIONAL_TEST)
         testTask.systemProperties[SystemPropertiesBuildAdapter.BASE_URL_PROPERTY_NAME] == "http://localhost:$propertyPort/"
 
         where:
         conventionValue | propertyPort
-        null            | new AppEnginePluginConvention().httpPort
+        null            | new AppEnginePluginExtension().httpPort
         8085            | 8085
     }
 }
