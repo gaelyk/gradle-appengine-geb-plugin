@@ -10,7 +10,11 @@ ruleset {
 		}
 	}
 	ruleset('rulesets/exceptions.xml')
-	ruleset('rulesets/formatting.xml')
+	ruleset('rulesets/formatting.xml') {
+		ClassJavadoc {
+			enabled = false
+		}
+	}
 	ruleset('rulesets/generic.xml')
 	ruleset('rulesets/grails.xml')
 	ruleset('rulesets/groovyism.xml')
@@ -30,9 +34,12 @@ ruleset {
 			doNotApplyToClassNames = '*Spec'
 		}
 	}
-	ruleset('rulesets/security.xml')
+	ruleset('rulesets/security.xml') {
+		JavaIoPackageAccess {
+			enabled = false
+		}
+	}
 	ruleset('rulesets/serialization.xml')
-	ruleset('rulesets/size.xml')
 	ruleset('rulesets/unnecessary.xml')
 	ruleset('rulesets/unused.xml')
 }

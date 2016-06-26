@@ -2,6 +2,7 @@ apply plugin: 'idea'
 apply plugin: 'groovy'
 apply plugin: 'nexus'
 apply plugin: 'codenarc'
+apply plugin: 'java-gradle-plugin'
 
 def compatibilityVersion = 1.7
 sourceCompatibility = compatibilityVersion
@@ -25,29 +26,44 @@ repositories {
 }
 
 dependencies {
-	compile localGroovy()
-	compile gradleApi(),
-            'com.google.appengine:gradle-appengine-plugin:1.9.34',
-			'org.codehaus.geb:geb-core:0.7.2'
+	compile localGroovy(),
+		gradleApi(),
+		'com.google.appengine:gradle-appengine-plugin:1.9.34'
+	compile('org.gebish:geb-core:0.13.1') {
+		exclude group: 'org.codehaus.groovy'
+	}
+	testCompile gradleTestKit()
 	testCompile('org.spockframework:spock-core:1.0-groovy-2.4') {
-		exclude group: 'org.codehaus.groovy', module: 'groovy-all'
+		exclude group: 'org.codehaus.groovy'
 	}
 	codenarc 'org.codenarc:CodeNarc:0.20'
 }
 
-idea.project {
-	jdkName = '1.6'
+idea {
+	workspace {
+		iws.withXml { provider ->
+			def node = provider.asNode()
+			def runManager = node.component.find { it.'@name' == 'RunManager' }
 
-	ipr.withXml { provider ->
-		def node = provider.asNode()
+			def defaultJUnitConf = runManager.configuration.find { it.'@default' == 'true' && it.'@type' == 'JUnit' }
 
-		// Use GIT
-		def vcsConfig = node.component.find { it.'@name' == 'VcsDirectoryMappings' }
-		vcsConfig.mapping[0].'@vcs' = 'Git'
+			defaultJUnitConf.method.replaceNode {
+				method {
+					option(name: "Gradle.BeforeRunTask", enabled: true, tasks: "pluginUnderTestMetadata", externalProjectPath: '$PROJECT_DIR$/build.gradle')
+					option(name: "Make", enabled: true)
+				}
+			}
+		}
+	}
 
-		// Set Gradle home
-		def gradleSettings = node.appendNode('component', [name: 'GradleSettings'])
-		gradleSettings.appendNode('option', [name: 'SDK_HOME', value: gradle.gradleHomeDir])
+	project {
+		jdkName = '1.7'
+		vcs = 'Git'
+
+		ipr.withXml { provider ->
+			def node = provider.asNode()
+			node.append(new XmlParser().parse(file("gradle/idea/gradle.xml")))
+		}
 	}
 }
 
